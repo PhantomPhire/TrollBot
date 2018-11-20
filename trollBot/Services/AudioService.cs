@@ -34,7 +34,7 @@ namespace TrollBot.Services
         /// </summary>
         private Random _rngeezus = new Random();
 
-        private ulong _stalkee;
+        private ulong _target = 0;
 
 
 
@@ -177,20 +177,44 @@ namespace TrollBot.Services
 
         }
 
+        private bool _trackingVoice = false;
 
-        public async Task SetStalkee(IGuild guild, ulong userId)
+        public async Task SetTarget(IGuild guild, ulong userId)
         {
+            //If told to stalk someone when a target already exists, clear the target first.
+            if (_target != 0)
+            {
+                ClearTarget(guild);
+            }
             //make sure guild exists
-            if (guild == null)
+            if (guild == null || userId == 0)
             {
                 return;
             }
-            _stalkee = userId;
+
+            if (_trackingVoice == false)
+            {
+                guild.AudioClient.SpeakingUpdated += OnSpeakingUpdated;
+                _trackingVoice = true;
+            }
+            _target = userId;
         }
 
-        public ulong GetStalkee()
+        public void ClearTarget(IGuild guild)
         {
-            return _stalkee;
+            guild.AudioClient.SpeakingUpdated -= OnSpeakingUpdated;
+            _trackingVoice = false;
+            _target = 0;
+        }
+
+        private Task OnSpeakingUpdated(ulong arg1, bool arg2)
+        {
+            throw new NotImplementedException();
+        }
+
+        public ulong GetTarget()
+        {
+            return _target;
         }
     }
 }

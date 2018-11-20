@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using TrollBot.Services;
 
 namespace TrollBot.Commands
@@ -90,15 +91,15 @@ namespace TrollBot.Commands
         /// <summary>
         /// Selects a user to stalk
         /// </summary>
-        /// <param name="userID"></param>
+        /// <param name="userId"></param>
         /// <returns></returns>
         [Command("Follow", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
          RequireUserPermission(GuildPermission.Administrator)]
-        public async Task StalkUser([Remainder] ulong userID)
+        public async Task StalkUser([Remainder] ulong userId)
         {
-            if (Context.Guild.GetUser(userID) != null)
+            if (Context.Guild.GetUser(userId) != null)
             {
-                await Service.Current.GetService<AudioService>().SetStalkee(Context.Guild, userID);
+                await Service.Current.GetService<AudioService>().SetTarget(Context.Guild, userId);
                 await ReplyAsync("Huehuehuehue");
             }
         }
@@ -107,7 +108,7 @@ namespace TrollBot.Commands
          RequireUserPermission(GuildPermission.Administrator)]
         public async Task StopStalking()
         {
-            await Service.Current.GetService<AudioService>().SetStalkee(Context.Guild, 0);
+            await Service.Current.GetService<AudioService>().SetTarget(Context.Guild, 0);
         }
     }
 }

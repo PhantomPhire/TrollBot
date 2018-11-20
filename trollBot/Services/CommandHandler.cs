@@ -35,11 +35,16 @@ namespace TrollBot.Services
         /// </summary>
         private readonly AudioService _audio;
 
+        /// <summary>
+        /// A reference shortcut to the StalkingService singleton
+        /// </summary>
+        private readonly StalkingService _stalker;
+
         // TODO: Move this to config
         /// <summary>
         /// The prefix for the bot to use for commands.
         /// </summary>
-        private const char prefix = '~';
+        private const char Prefix = '~';
 
         // TODO: Move this to config
         /// <summary>
@@ -54,11 +59,11 @@ namespace TrollBot.Services
         {
             _commands = Service.Current.GetRequiredService<CommandService>();
             _discord = Service.Current.GetRequiredService<DiscordSocketClient>();
+            _stalker = Service.Current.GetRequiredService<StalkingService>();
             _roasts = Service.Current.GetRequiredService<RoastService>();
             _audio = Service.Current.GetRequiredService<AudioService>();
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.UserVoiceStateUpdated += UserVoiceStateUpdatedAsync;
-            _discord.GuildMemberUpdated += GuildMemberUpdatedAsync;
         }
 
         /// <summary>
@@ -78,8 +83,7 @@ namespace TrollBot.Services
         /// <returns></returns>
         public async Task UserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldVoiceState, SocketVoiceState newVoiceState)
         {
-            
-            if (user.Id == _audio.GetStalkee())
+            if (user.Id == _audio.GetTarget())
             {
                 var guild = oldVoiceState.VoiceChannel.Guild;
 
@@ -93,20 +97,6 @@ namespace TrollBot.Services
                     await Service.Current.GetService<AudioService>().LeaveAudioChannelTask(guild);
                 
             }
-        }
-
-        public async Task GuildMemberUpdatedAsync(SocketGuildUser userOld, SocketGuildUser userNew)
-        {
-            var client = userNew.Guild.AudioClient;
-            userNew.Guild
-            client.SpeakingUpdated += OnClientSpeaking;
-        }
-
-        
-
-        private async Task OnClientSpeaking(ulong userID, bool speaking)
-        {
-            await 
         }
 
         /// <summary>
@@ -154,7 +144,7 @@ namespace TrollBot.Services
             var argPos = 0; // This value holds the offset where the prefix ends
 
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos) &&
-                !message.HasCharPrefix(prefix, ref argPos) &&
+                !message.HasCharPrefix(Prefix, ref argPos) &&
                 !message.HasStringPrefix(longPrefix, ref argPos))
             {
                 return String.Empty;
