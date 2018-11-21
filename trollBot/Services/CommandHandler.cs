@@ -1,10 +1,12 @@
-﻿using System;
-using System.Reflection;
-using System.Threading.Tasks;
-using Microsoft.Extensions.DependencyInjection;
-using Discord;
+﻿using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using Microsoft.Extensions.DependencyInjection;
+using System;
+using System.Net.Sockets;
+using System.Reflection;
+using System.Threading.Tasks;
+using Discord.Audio;
 
 namespace TrollBot.Services
 {
@@ -28,11 +30,21 @@ namespace TrollBot.Services
         /// </summary>
         private readonly RoastService _roasts;
 
+        /// <summary>
+        /// A reference shortcut to the AudioService singleton
+        /// </summary>
+        private readonly AudioService _audio;
+
+        /// <summary>
+        /// A reference shortcut to the StalkingService singleton
+        /// </summary>
+        private readonly StalkingService _stalker;
+
         // TODO: Move this to config
         /// <summary>
         /// The prefix for the bot to use for commands.
         /// </summary>
-        private const char prefix = '~';
+        private const char Prefix = '~';
 
         // TODO: Move this to config
         /// <summary>
@@ -41,14 +53,17 @@ namespace TrollBot.Services
         private const string longPrefix = "troll ";
 
         /// <summary>
-        /// Initiailizes a new instance of the CommandHandler class
+        /// Initializes a new instance of the CommandHandler class
         /// </summary>
         public CommandHandler()
         {
             _commands = Service.Current.GetRequiredService<CommandService>();
             _discord = Service.Current.GetRequiredService<DiscordSocketClient>();
+            _stalker = Service.Current.GetRequiredService<StalkingService>();
             _roasts = Service.Current.GetRequiredService<RoastService>();
+            _audio = Service.Current.GetRequiredService<AudioService>();
             _discord.MessageReceived += MessageReceivedAsync;
+            _discord.UserVoiceStateUpdated += UserVoiceStateUpdatedAsync;
         }
 
         /// <summary>
@@ -57,6 +72,31 @@ namespace TrollBot.Services
         public async Task InitializeAsync()
         {
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly());
+        }
+
+        /// <summary>
+        /// A callback method to be used whenever the bot detects a user joining a voice channel
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="oldVoiceState"></param>
+        /// <param name="newVoiceState"></param>
+        /// <returns></returns>
+        public async Task UserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldVoiceState, SocketVoiceState newVoiceState)
+        {
+            if (user.Id == _stalker.GetTarget())
+            {
+                var guild = oldVoiceState.VoiceChannel.Guild;
+
+                //Will have to double check this. I'm assuming VoiceChannel will be null when user is not in a voice channel
+                if (newVoiceState.VoiceChannel != null)
+                {
+                    await Service.Current.GetService<AudioService>()
+                        .JoinAudioChannelTask(guild, newVoiceState.VoiceChannel);
+                }
+                else
+                    await Service.Current.GetService<AudioService>().LeaveAudioChannelTask(guild);
+                
+            }
         }
 
         /// <summary>
@@ -104,7 +144,7 @@ namespace TrollBot.Services
             var argPos = 0; // This value holds the offset where the prefix ends
 
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos) &&
-                !message.HasCharPrefix(prefix, ref argPos) &&
+                !message.HasCharPrefix(Prefix, ref argPos) &&
                 !message.HasStringPrefix(longPrefix, ref argPos))
             {
                 return String.Empty;

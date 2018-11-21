@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using static System.String;
 
 namespace TrollBot.Services
 {
@@ -12,12 +13,12 @@ namespace TrollBot.Services
         /// <summary>
         /// Represents the path to the roasts text file.
         /// </summary>
-        private string roastsPath = "./roasts.txt";
+        private readonly string _roastsPath = "./roasts.txt";
 
         /// <summary>
         /// Defines the delimiter to use for all roasts when reading/saving
         /// </summary>
-        private string roastDelimiter = "~\n";
+        private const string RoastDelimiter = "~\n";
 
         /// <summary>
         /// The list of roasts,
@@ -33,14 +34,14 @@ namespace TrollBot.Services
         }
 
         /// <summary>
-        /// Determines the probablility of the function RollRoast() succeeding.
+        /// Determines the probability of the function RollRoast() succeeding.
         /// </summary>
-        private const double roastProbability = 0.2;
+        private const double RoastProbability = 0.2;
 
         /// <summary>
         /// The random number generator for the roasts class
         /// </summary>
-        private Random _rng = new Random();
+        private readonly Random _rng = new Random();
 
         /// <summary>
         /// Determines, per message, if the TrollBot should roast a member.
@@ -53,14 +54,14 @@ namespace TrollBot.Services
                 return false;
             }
 
-            double roll = _rng.Next(0, 100) / 100.0;
-            return (roll < roastProbability);
+            var roll = _rng.Next(0, 100) / 100.0;
+            return (roll < RoastProbability);
         }
 
         /// <summary>
-        /// Represents the placeholder for the username to raost.
+        /// Represents the placeholder for the username to roast.
         /// </summary>
-        private const string usernamePlaceholder = "%U%";
+        private const string UsernamePlaceholder = "%U%";
 
         /// <summary>
         /// Gets a random roast from the roasts list.
@@ -71,11 +72,11 @@ namespace TrollBot.Services
         {
             if (_roasts.Count == 0)
             {
-                return String.Empty;
+                return Empty;
             }
 
             int roll = _rng.Next(0, _roasts.Count);
-            return _roasts[roll].Replace(usernamePlaceholder, username);
+            return _roasts[roll].Replace(UsernamePlaceholder, username);
         }
 
         /// <summary>
@@ -86,7 +87,7 @@ namespace TrollBot.Services
         public async Task<bool> AddRoast(string roast)
         {
             _roasts.Add(roast);
-            return await writeOut();
+            return await WriteOut();
         }
 
         /// <summary>
@@ -97,7 +98,7 @@ namespace TrollBot.Services
         {
             try
             {
-                _roasts = new List<string>((await System.IO.File.ReadAllTextAsync(roastsPath)).Split(roastDelimiter));
+                _roasts = new List<string>((await System.IO.File.ReadAllTextAsync(_roastsPath)).Split(RoastDelimiter));
                 return true;
             }
             catch (Exception ex)
@@ -112,20 +113,20 @@ namespace TrollBot.Services
         /// Writes the current roasts to the roasts configuration file.
         /// </summary>
         /// <returns>Returns true if the write succeeds, false otherwise</returns>
-        private async Task<bool> writeOut()
+        private async Task<bool> WriteOut()
         {
             try
             {
-                string fileString = String.Empty;
-                foreach (string roast in _roasts)
+                var fileString = string.Empty;
+                foreach (var roast in _roasts)
                 {
-                    if (fileString != String.Empty)
+                    if (fileString != Empty)
                     {
-                        fileString += roastDelimiter;
+                        fileString += RoastDelimiter;
                     }
                     fileString += roast;
                 }
-                await System.IO.File.WriteAllTextAsync(roastsPath, fileString);
+                await System.IO.File.WriteAllTextAsync(_roastsPath, fileString);
                 return true;
             }
             catch (Exception ex)
