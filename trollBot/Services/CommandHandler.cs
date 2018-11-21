@@ -80,11 +80,11 @@ namespace TrollBot.Services
                 {
                     string userToRoast = message.Author.Username;
 
-                    if (message.Author is IGuildUser && ((message.Author as IGuildUser).Nickname != null))
+                    if (message.Author is SocketGuildUser user)
                     {
-                        userToRoast = (message.Author as IGuildUser).Nickname;
+                        userToRoast = user.Mention;
                     }
-                    reply = _roasts.GetRoast(userToRoast);
+                    reply = _roasts.GetRoast(userToRoast, null);
                 }
             }
 

@@ -50,7 +50,7 @@ namespace TrollBot.Commands
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task RoastAsyc([Remainder] string username)
         {
-            await ReplyAsync(Service.Current.GetRequiredService<RoastService>().GetRoast(username));
+            await ReplyAsync(Service.Current.GetRequiredService<RoastService>().GetRoast(username, Context.Guild));
         }
     }
 }

@@ -260,6 +260,11 @@ paket-files/
 __pycache__/
 *.pyc
 
+# Ignore dlls for voice
+libopus.dll
+libsodium.dll
+opus.dll
+
 # Ignore config file which could contain sensitive info
 config.json
 
