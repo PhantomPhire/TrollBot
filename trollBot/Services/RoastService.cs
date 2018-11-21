@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Discord.WebSocket;
 
 namespace TrollBot.Services
 {
@@ -66,16 +67,24 @@ namespace TrollBot.Services
         /// Gets a random roast from the roasts list.
         /// </summary>
         /// <param name="username">The name of the user to roast.</param>
+        /// <param name="guild">The guild of the message's origin, for name resolution.</param>
         /// <returns>A random roast from the roasts list.</returns>
-        public string GetRoast(string username)
+        public string GetRoast(string username, SocketGuild guild)
         {
+            string resolvedUsername = username;
+            SocketGuildUser user = NameResolution.StringToGuildUser(username, guild);
+            if (user != null)
+            {
+                resolvedUsername = user.Mention;
+            }
+
             if (_roasts.Count == 0)
             {
                 return String.Empty;
             }
 
             int roll = _rng.Next(0, _roasts.Count);
-            return _roasts[roll].Replace(usernamePlaceholder, username);
+            return _roasts[roll].Replace(usernamePlaceholder, resolvedUsername);
         }
 
         /// <summary>
