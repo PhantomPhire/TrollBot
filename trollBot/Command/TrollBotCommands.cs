@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Discord;
 using Discord.Commands;
@@ -59,7 +60,11 @@ namespace TrollBot.Commands
          RequireUserPermission(GuildPermission.Administrator)]
         public async Task JoinVoiceChannel()
         {
-            var channel = Context.Guild.CurrentUser.VoiceChannel;
+            IVoiceChannel channel = null;
+            if (Context.User is SocketGuildUser user)
+            {
+                channel = user.VoiceChannel;
+            }
             await Service.Current.GetService<AudioService>().JoinAudioChannelTask(Context.Guild, channel);
         }
 
@@ -91,24 +96,30 @@ namespace TrollBot.Commands
         /// <summary>
         /// Selects a user to stalk
         /// </summary>
-        /// <param name="userId"></param>
+        /// <param name="identification"></param>
         /// <returns></returns>
-        [Command("Follow", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
+        [Command("follow", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
          RequireUserPermission(GuildPermission.Administrator)]
-        public async Task StalkUser([Remainder] ulong userId)
+        public async Task StalkUser([Remainder] string identification)
         {
-            if (Context.Guild.GetUser(userId) != null)
+            var userList = Context.Guild.Users;
+            foreach (var user in userList)
             {
-                await Service.Current.GetService<AudioService>().SetTarget(Context.Guild, userId);
-                await ReplyAsync("Huehuehuehue");
+                if (user.Id.ToString() == identification || user.Username == identification ||
+                    user.Nickname == identification)
+                {
+                    await Service.Current.GetService<StalkingService>().SetTarget(user, Context.Guild);
+                    await ReplyAsync("Huehuehuehue");
+                    break;
+                }
             }
         }
 
-        [Command("Stahp", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
+        [Command("stop", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
          RequireUserPermission(GuildPermission.Administrator)]
         public async Task StopStalking()
         {
-            await Service.Current.GetService<AudioService>().SetTarget(Context.Guild, 0);
+            await Service.Current.GetService<StalkingService>().ClearTarget(Context.Guild);
         }
     }
 }

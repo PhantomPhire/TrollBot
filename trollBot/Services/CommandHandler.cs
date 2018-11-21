@@ -83,7 +83,7 @@ namespace TrollBot.Services
         /// <returns></returns>
         public async Task UserVoiceStateUpdatedAsync(SocketUser user, SocketVoiceState oldVoiceState, SocketVoiceState newVoiceState)
         {
-            if (user.Id == _audio.GetTarget())
+            if (user.Id == _stalker.GetTarget())
             {
                 var guild = oldVoiceState.VoiceChannel.Guild;
 

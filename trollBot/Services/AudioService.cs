@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using Discord.Rest;
+using Discord.WebSocket;
 
 
 namespace TrollBot.Services
@@ -28,20 +29,17 @@ namespace TrollBot.Services
         /// The list of audio files to play
         /// </summary>
         private List<string> _audioList;
-        
+
         /// <summary>
         /// The random number generator for the roasts class
         /// </summary>
         private Random _rngeezus = new Random();
 
-        private ulong _target = 0;
-
-
-
         /// <summary>
         /// Keeps Track of which audio channel the bot is currently connected to
         /// </summary>
-        private readonly ConcurrentDictionary<ulong, IAudioClient> _connectedChannels = new ConcurrentDictionary<ulong, IAudioClient>();
+        private readonly ConcurrentDictionary<ulong, IAudioClient> _connectedChannels =
+            new ConcurrentDictionary<ulong, IAudioClient>();
 
         /// <summary>
         /// Asynchronous Task for attempting to join an Audio Channel. 
@@ -56,7 +54,7 @@ namespace TrollBot.Services
             {
                 return;
             }
-            
+
             //Check current Audio Client. If it's in _connectedChannels, then the bot has already joined Audio Channel
             if (_connectedChannels.TryGetValue(guild.Id, out var client))
             {
@@ -89,7 +87,7 @@ namespace TrollBot.Services
             // make sure guild exists
             if (guild == null)
             {
-                return; 
+                return;
             }
             //TODO: Check if issues can arise from leaving an audio channel while audio is playing. Might have to stop audio file before disconnecting.
 
@@ -105,18 +103,10 @@ namespace TrollBot.Services
         /// Asynchronous task for attempting to play and audio file.
         /// </summary>
         /// <param name="guild"></param>
-        /// <param name="channel"></param>
-        /// <param name="path"></param>
         /// <returns></returns>
-        public async Task SendAudioAsync(IGuild guild, IMessageChannel channel)
+        public async Task SendAudioAsync(IGuild guild)
         {
-           var path = GetAudioFile();
-
-           if (!File.Exists(path))
-            {
-                await channel.SendMessageAsync("File does not exist.");
-                return;
-            }
+            var path = GetAudioFile();
 
             if (_connectedChannels.TryGetValue(guild.Id, out var client))
             {
@@ -153,7 +143,9 @@ namespace TrollBot.Services
             }
             catch (Exception ex)
             {
-                Console.WriteLine("Error when trying to parse folder for .MP3 files:\n\n{0}\n\nUnable to infuriate members!", ex.ToString());
+                Console.WriteLine(
+                    "Error when trying to parse folder for .MP3 files:\n\n{0}\n\nUnable to infuriate members!",
+                    ex.ToString());
                 _audioList = new List<string>();
                 return false;
             }
@@ -171,50 +163,9 @@ namespace TrollBot.Services
             {
                 return string.Empty;
             }
+
             var roll = _rngeezus.Next(0, numberOfFiles);
             return _audioList[roll];
-
-
-        }
-
-        private bool _trackingVoice = false;
-
-        public async Task SetTarget(IGuild guild, ulong userId)
-        {
-            //If told to stalk someone when a target already exists, clear the target first.
-            if (_target != 0)
-            {
-                ClearTarget(guild);
-            }
-            //make sure guild exists
-            if (guild == null || userId == 0)
-            {
-                return;
-            }
-
-            if (_trackingVoice == false)
-            {
-                guild.AudioClient.SpeakingUpdated += OnSpeakingUpdated;
-                _trackingVoice = true;
-            }
-            _target = userId;
-        }
-
-        public void ClearTarget(IGuild guild)
-        {
-            guild.AudioClient.SpeakingUpdated -= OnSpeakingUpdated;
-            _trackingVoice = false;
-            _target = 0;
-        }
-
-        private Task OnSpeakingUpdated(ulong arg1, bool arg2)
-        {
-            throw new NotImplementedException();
-        }
-
-        public ulong GetTarget()
-        {
-            return _target;
         }
     }
 }
