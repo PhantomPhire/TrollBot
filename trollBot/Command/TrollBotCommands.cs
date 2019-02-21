@@ -79,20 +79,6 @@ namespace TrollBot.Commands
             await Service.Current.GetService<AudioService>().LeaveAudioChannelTask(Context.Guild);
         }
 
-        /*
-        /// <summary>
-        /// Plays an audio file in voice  channel
-        /// </summary>
-        /// <param name="song"></param>
-        /// <returns></returns>
-        [Command("play", RunMode = RunMode.Async), RequireContext(ContextType.Guild),
-         RequireUserPermission(GuildPermission.Administrator)]
-        public async Task PlayCmd()
-        {
-            await Service.Current.GetService<AudioService>().SendAudioAsync(Context.Guild, Context.Channel);
-        }
-        */
-
         /// <summary>
         /// Selects a user to stalk
         /// </summary>
@@ -120,6 +106,62 @@ namespace TrollBot.Commands
         public async Task StopStalking()
         {
             await Service.Current.GetService<StalkingService>().ClearTarget(Context.Guild);
+        }
+
+        /// <summary>
+        /// Adds a suggestion to the list in the suggestion service, and saves it to the disc.
+        /// </summary>
+        /// <param name="entry"></param>
+        [Command("addsuggestion", RunMode = RunMode.Async), Alias("adds"), RequireContext(ContextType.Guild),
+         RequireUserPermission(GuildPermission.Administrator)]
+        public async Task AddSuggestionAsync([Remainder] string entry)
+        {
+            var result = await Service.Current.GetRequiredService<SuggestionService>().AddSuggestion(entry);
+            if (result == 1)
+            {
+                await ReplyAsync("Entry added!");
+            }
+            else if (result == 2)
+            {
+                await ReplyAsync("Bruh...that was already suggested. Can't you read?");
+            }
+            else
+            {
+                await ReplyAsync("Issue saving suggestion; it was added but has not been saved to disc.");
+            }
+        }
+
+        /// <summary>
+        /// Removes a suggestion from the list in the suggestion service, and saves it to the disc.
+        /// </summary>
+        /// <param name="entry"></param>
+        [Command("removesuggestion", RunMode = RunMode.Async), Alias("rems"), RequireContext(ContextType.Guild),
+         RequireUserPermission(GuildPermission.Administrator)]
+        public async Task RemoveSuggestionAsync([Remainder] string entry)
+        {
+            var result = await Service.Current.GetRequiredService<SuggestionService>().RemoveSuggestion(entry);
+            if (result == 1)
+            {
+                await ReplyAsync("Entry removed!");
+            }
+            else if (result == 2)
+            {
+                await ReplyAsync("This was never suggested... Can't you read?");
+            }
+            else
+            {
+                await ReplyAsync("Issue saving list after removing suggestion; it was removed but has not been saved to disc.");
+            }
+        }
+        /// <summary>
+        /// Roasts an user
+        /// </summary>
+        /// <param name="username">The name of the user to roast</param>
+        [Command("getsuggestions", RunMode = RunMode.Async), Alias("gets"), RequireContext(ContextType.Guild),
+         RequireUserPermission(GuildPermission.Administrator)]
+        public async Task GetSuggestionsAsync()
+        {
+            await ReplyAsync(Service.Current.GetRequiredService<SuggestionService>().GetSuggestions());
         }
     }
 }

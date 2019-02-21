@@ -43,6 +43,7 @@ namespace TrollBot
                 .AddSingleton<RoastService>()
                 .AddSingleton<AudioService>()
                 .AddSingleton<StalkingService>()
+                .AddSingleton<SuggestionService>()
                 .AddSingleton<CommandHandler>()
                 .AddSingleton<HttpClient>()
                 .BuildServiceProvider();

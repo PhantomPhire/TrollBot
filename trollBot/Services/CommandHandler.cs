@@ -36,6 +36,11 @@ namespace TrollBot.Services
         private readonly AudioService _audio;
 
         /// <summary>
+        /// A reference shortcut to the SuggestionService singleton
+        /// </summary>
+        private readonly SuggestionService _suggestions;
+
+        /// <summary>
         /// A reference shortcut to the StalkingService singleton
         /// </summary>
         private readonly StalkingService _stalker;
@@ -62,6 +67,7 @@ namespace TrollBot.Services
             _stalker = Service.Current.GetRequiredService<StalkingService>();
             _roasts = Service.Current.GetRequiredService<RoastService>();
             _audio = Service.Current.GetRequiredService<AudioService>();
+            _suggestions = Service.Current.GetRequiredService<SuggestionService>();
             _discord.MessageReceived += MessageReceivedAsync;
             _discord.UserVoiceStateUpdated += UserVoiceStateUpdatedAsync;
         }
